@@ -8,7 +8,7 @@ export const env = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     AI_SERVICE_TOKEN: process.env.AI_SERVICE_TOKEN,
     
-    AI_PROVIDER: process.env.AI_PROVIDER || "gemini",
+    AI_PROVIDER: process.env.AI_PROVIDER || "openai",
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 
     GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-2.5-flash",
@@ -17,4 +17,5 @@ export const env = {
     OLLAMA_MODEL: process.env.OLLAMA_MODEL || "llama3.1",
     TIMEZONE: process.env.TIMEZONE || "Asia/Jerusalem",
 };
+
 

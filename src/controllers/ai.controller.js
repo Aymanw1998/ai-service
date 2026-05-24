@@ -1,6 +1,7 @@
 ﻿import OpenAI from "openai";
 
 import { env } from "../config/env.js";
+import { askOllama } from "../providers/ollama/index.js";
 
 const DEFAULT_SYSTEM_PROMPT = `You are a global AI assistant service used by multiple projects.
 Answer clearly and practically.
@@ -35,6 +36,49 @@ const buildUserInput = ({ message, context, project, source }) => {
   );
 };
 
+const askOpenAI = async ({ systemPrompt, input }) => {
+  if (!env.OPENAI_API_KEY) {
+    const error = new Error("OPENAI_API_KEY is missing in AI-SERVICE");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const client = new OpenAI({
+    apiKey: env.OPENAI_API_KEY,
+  });
+
+  const response = await client.responses.create({
+    model: env.OPENAI_MODEL || "gpt-4o-mini",
+    instructions: systemPrompt,
+    input,
+  });
+
+  return response.output_text || "";
+};
+
+const askConfiguredProvider = async ({ systemPrompt, input }) => {
+  const provider = String(env.AI_PROVIDER || "openai").toLowerCase();
+
+  if (provider === "ollama") {
+    return askOllama({
+      model: env.OLLAMA_MODEL,
+      systemPrompt,
+      message: input,
+    });
+  }
+
+  if (provider === "openai") {
+    return askOpenAI({
+      systemPrompt,
+      input,
+    });
+  }
+
+  const error = new Error(`Unsupported AI_PROVIDER: ${provider}`);
+  error.statusCode = 400;
+  throw error;
+};
+
 export async function chat(req, res) {
   try {
     const {
@@ -51,20 +95,8 @@ export async function chat(req, res) {
       });
     }
 
-    if (!env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        success: false,
-        message: "OPENAI_API_KEY is missing in AI-SERVICE",
-      });
-    }
-
-    const client = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-    });
-
-    const response = await client.responses.create({
-      model: env.OPENAI_MODEL || "gpt-4o-mini",
-      instructions: getSystemPrompt(project),
+    const answer = await askConfiguredProvider({
+      systemPrompt: getSystemPrompt(project),
       input: buildUserInput({
         message: String(message).trim(),
         context,
@@ -75,7 +107,7 @@ export async function chat(req, res) {
 
     return res.json({
       success: true,
-      answer: response.output_text || "",
+      answer,
     });
   } catch (error) {
     console.error("AI SERVICE ERROR FULL:", error);
