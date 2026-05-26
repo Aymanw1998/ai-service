@@ -88,6 +88,13 @@ export async function chat(req, res) {
       source = "global-server",
     } = req.body || {};
 
+    console.log("[AI Service] Incoming /api/ai/chat request", {
+      project,
+      source,
+      message,
+      context,
+    });
+
     if (!message || !String(message).trim()) {
       return res.status(400).json({
         success: false,
@@ -103,6 +110,12 @@ export async function chat(req, res) {
         project,
         source,
       }),
+    });
+
+    console.log("[AI Service] Provider returned answer", {
+      project,
+      source,
+      answer,
     });
 
     return res.json({
