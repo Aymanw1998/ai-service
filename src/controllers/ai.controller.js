@@ -1,6 +1,7 @@
 ﻿import OpenAI from "openai";
 
 import { env } from "../config/env.js";
+import { askGemini } from "../providers/gemini/index.js";
 import { askOllama } from "../providers/ollama/index.js";
 
 const DEFAULT_SYSTEM_PROMPT = `You are a global AI assistant service used by multiple projects.
@@ -71,6 +72,14 @@ const askConfiguredProvider = async ({ systemPrompt, input }) => {
     return askOpenAI({
       systemPrompt,
       input,
+    });
+  }
+
+  if (provider === "gemini") {
+    return askGemini({
+      model: env.GEMINI_MODEL,
+      systemPrompt,
+      message: input,
     });
   }
 
